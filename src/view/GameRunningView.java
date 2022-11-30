@@ -105,7 +105,7 @@ public class GameRunningView implements GameStatusView {
 
 	@Override
 	public void updates() {
-		//map.playersInputUpdate();
+		map.playersInputUpdate();
 		map.objectDynamicUpdate();
 
 		map.playerCollisionDetection();

@@ -26,6 +26,8 @@ public class Player extends ObjectDynamic {
 	private double dx = 0, dy = 0; // attacked animation용 변수
 	private long timer = 0; // 아이템용 타이머
 
+	public boolean upPressed, downPressed, leftPressed, rightPressed;
+	
 	public Player(double x, double y, int mapWidthBoundary) {
 		super(x, y, mapWidthBoundary);
 		width = height = GameSettings.scaledSize;
@@ -152,7 +154,7 @@ public class Player extends ObjectDynamic {
 		}
 
 		if (!controlBlocked) {
-			if (controller.getRightPressed()) {
+			if (rightPressed) {
 				direction = 0;
 
 				xRightVel += 0.2;
@@ -164,7 +166,7 @@ public class Player extends ObjectDynamic {
 					xRightVel = 0;
 			}
 
-			if (controller.getLeftPressed()) {
+			if (leftPressed) {
 				direction = 1;
 
 				xLeftVel -= 0.2;
@@ -176,7 +178,7 @@ public class Player extends ObjectDynamic {
 					xLeftVel = 0;
 			}
 
-			if (!isJump && controller.getUpPressed() && yVel <= 0) {
+			if (!isJump && upPressed && yVel <= 0) {
 				audio.play("smb_jump-small");
 				jump(16);
 			}
