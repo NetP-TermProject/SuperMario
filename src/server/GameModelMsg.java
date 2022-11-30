@@ -75,8 +75,8 @@ public class GameModelMsg implements Serializable {
 		this.roomNumber = roomNumber;
 	}
 
-	public GameModelMsg(String roomNumber, String playerName, String code, double x, double y, double xLeftVel,
-			double xRightVel, double yVel, boolean upPressed, boolean downPressed, boolean leftPressed,
+	public GameModelMsg(int playerNum, String roomNumber, String playerName, String code, double x, double y,
+			double xLeftVel, double xRightVel, double yVel, boolean upPressed, boolean downPressed, boolean leftPressed,
 			boolean rightPressed, boolean spacePressed) {
 		this.x = x;
 		this.y = y;

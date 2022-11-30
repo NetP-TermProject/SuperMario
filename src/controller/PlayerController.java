@@ -124,4 +124,14 @@ public class PlayerController implements Controller {
 	public boolean getSpacePressed() {
 		return spacePressed;
 	}
+
+	public void setKeyPressed(boolean upPressed, boolean downPressed, boolean leftPressed, boolean rightPressed,
+			boolean spacePressed) {
+		this.upPressed = upPressed;
+		this.downPressed = downPressed;
+		this.leftPressed = leftPressed;
+		this.rightPressed = rightPressed;
+		this.spacePressed = spacePressed;
+	}
+
 }

@@ -6,6 +6,7 @@ import java.io.ObjectOutputStream;
 import java.net.Socket;
 
 import controller.OthersController;
+import controller.PlayerController;
 import main.GamePanel;
 import server.GameModelMsg;
 import server.NetworkStatus;
@@ -15,13 +16,20 @@ public class GameClient {
 	private ObjectInputStream ois;
 	private ObjectOutputStream oos;
 	private Socket socket;
-	//private ListenNetwork net;
+	// private ListenNetwork net;
 	private GamePanel gamePanel = GamePanel.getInstance();
 	private OthersController otherController = (OthersController) gamePanel.getOthersController();
+	private PlayerController playerController = (PlayerController) gamePanel.getController();
+	private int playerNum = 0;
+
+	public int getPlayerNum() {
+		return playerNum;
+	}
+
 	private String roomNumber = "";
 
 	private Thread net;
-	
+
 	public String getRoomNumber() {
 		return roomNumber;
 	}
@@ -88,20 +96,44 @@ public class GameClient {
 						// gamePanel.gameReady(true);
 					} else if (objectGameMsg.getCode().matches(NetworkStatus.GAME_START)) {
 						roomNumber = objectGameMsg.getRoomNumber();
-						gamePanel.setPlayerNumber(objectGameMsg.getPlayerNum());
+						playerNum = objectGameMsg.getPlayerNum();
+						gamePanel.setPlayerNumber(playerNum);
+						System.out.println(playerNum);
 						gamePanel.gameRunning();
 					} else if (objectGameMsg.getCode().matches(NetworkStatus.GAME_BUTTON)) {
-						// 좌표 동기화
-						otherController.getPlayer().setX(objectGameMsg.getX());
-						otherController.getPlayer().setY(objectGameMsg.getY());
+						if (playerNum != objectGameMsg.getPlayerNum()) { // 다른 플레이어한테 키보드 받음
+							System.out.println("other" + playerNum);
+							// 좌표 동기화
+							otherController.getPlayer().setX(objectGameMsg.getX());
+							otherController.getPlayer().setY(objectGameMsg.getY());
+							otherController.setKeyPressed(objectGameMsg.isUpPressed(), objectGameMsg.isDownPressed(),
+									objectGameMsg.isLeftPressed(), objectGameMsg.isRightPressed(),
+									objectGameMsg.isSpacePressed());
+							otherController.getPlayer().setxLeftVel(objectGameMsg.getxLeftVel());
+							otherController.getPlayer().setxRightVel(objectGameMsg.getxRightVel());
+							otherController.getPlayer().setyVel(objectGameMsg.getyVel());
+							otherController.getPlayer().move();
+						}
+						if (playerNum == objectGameMsg.getPlayerNum()) { // 내가 보낸 키보드 값
+							// 좌표 동기화
+							System.out.println("me" + playerNum);
+							playerController.getPlayer().setX(objectGameMsg.getX());
+							playerController.getPlayer().setY(objectGameMsg.getY());
+							playerController.setKeyPressed(objectGameMsg.isUpPressed(), objectGameMsg.isDownPressed(),
+									objectGameMsg.isLeftPressed(), objectGameMsg.isRightPressed(),
+									objectGameMsg.isSpacePressed());
+							playerController.getPlayer().setxLeftVel(objectGameMsg.getxLeftVel());
+							playerController.getPlayer().setxRightVel(objectGameMsg.getxRightVel());
+							playerController.getPlayer().setyVel(objectGameMsg.getyVel());
+							playerController.getPlayer().move();
+						}
+
 						// 속도 동기화
 						// otherController.getPlayer().setxLeftVel(objectGameMsg.getxLeftVel());
 						// otherController.getPlayer().setxRightVel(objectGameMsg.getxRightVel());
 						// otherController.getPlayer().setyVel(objectGameMsg.getyVel());
 						// 키 동기화
-						otherController.setKeyPressed(objectGameMsg.isUpPressed(), objectGameMsg.isDownPressed(),
-								objectGameMsg.isLeftPressed(), objectGameMsg.isRightPressed(),
-								objectGameMsg.isSpacePressed());
+
 					} else if (objectGameMsg.getCode().matches(NetworkStatus.GAME_LOSE)) {
 						gamePanel.gameLose();
 						SendLogoutMessage();
@@ -139,8 +171,8 @@ public class GameClient {
 	public void SendButtonAction(String roomNumber, double x, double y, double xLeftVel, double xRightVel, double yVel,
 			boolean upPressed, boolean downPressed, boolean leftPressed, boolean rightPressed, boolean spacePressed) {
 		// 좌표와 키 입력 값 보냄
-		GameModelMsg objectGameMsg = new GameModelMsg(roomNumber, userName, NetworkStatus.GAME_BUTTON, x, y, xLeftVel,
-				xRightVel, yVel, upPressed, downPressed, leftPressed, rightPressed, spacePressed);
+		GameModelMsg objectGameMsg = new GameModelMsg(playerNum, roomNumber, userName, NetworkStatus.GAME_BUTTON, x, y,
+				xLeftVel, xRightVel, yVel, upPressed, downPressed, leftPressed, rightPressed, spacePressed);
 		SendObject(objectGameMsg);
 	}
 
