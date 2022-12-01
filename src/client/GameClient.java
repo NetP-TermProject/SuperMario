@@ -106,42 +106,40 @@ public class GameClient {
 							// 좌표 동기화
 							otherController.getPlayer().setX(objectGameMsg.getX());
 							otherController.getPlayer().setY(objectGameMsg.getY());
-							
 							otherController.getPlayer().leftPressed = objectGameMsg.isLeftPressed();
 							otherController.getPlayer().rightPressed = objectGameMsg.isRightPressed();
 							otherController.getPlayer().upPressed = objectGameMsg.isUpPressed();
-							
-							//otherController.setKeyPressed(objectGameMsg.isUpPressed(), objectGameMsg.isDownPressed(),
-							//		objectGameMsg.isLeftPressed(), objectGameMsg.isRightPressed(),
-							//		objectGameMsg.isSpacePressed());
-							//otherController.getPlayer().setxLeftVel(objectGameMsg.getxLeftVel());
-							//otherController.getPlayer().setxRightVel(objectGameMsg.getxRightVel());
-							//otherController.getPlayer().setyVel(objectGameMsg.getyVel());
-							//otherController.getPlayer().move();
+							// otherController.getPlayer().setyVel(objectGameMsg.getyVel());
+
+//							otherController.setKeyPressed(objectGameMsg.isUpPressed(), objectGameMsg.isDownPressed(),
+//									objectGameMsg.isLeftPressed(), objectGameMsg.isRightPressed(),
+//									objectGameMsg.isSpacePressed());
+//							otherController.getPlayer().setxLeftVel(objectGameMsg.getxLeftVel());
+//							otherController.getPlayer().setxRightVel(objectGameMsg.getxRightVel());
+//							otherController.getPlayer().setyVel(objectGameMsg.getyVel());
+//							otherController.getPlayer().move();
 						}
-						else if (playerNum == objectGameMsg.getPlayerNum()) { // 내가 보낸 키보드 값
+						if (playerNum == objectGameMsg.getPlayerNum()) { // 내가 보낸 키보드 값
 							// 좌표 동기화
 							System.out.println("me" + playerNum);
 							playerController.getPlayer().setX(objectGameMsg.getX());
 							playerController.getPlayer().setY(objectGameMsg.getY());
-							
+
 							playerController.getPlayer().leftPressed = objectGameMsg.isLeftPressed();
 							playerController.getPlayer().rightPressed = objectGameMsg.isRightPressed();
 							playerController.getPlayer().upPressed = objectGameMsg.isUpPressed();
-							
-							//playerController.setKeyPressed(objectGameMsg.isUpPressed(), objectGameMsg.isDownPressed(),
-							//		objectGameMsg.isLeftPressed(), objectGameMsg.isRightPressed(),
-							//		objectGameMsg.isSpacePressed());
-							//playerController.getPlayer().setxLeftVel(objectGameMsg.getxLeftVel());
-							//playerController.getPlayer().setxRightVel(objectGameMsg.getxRightVel());
-							//playerController.getPlayer().setyVel(objectGameMsg.getyVel());
-							//playerController.getPlayer().move();
+							// playerController.getPlayer().setyVel(objectGameMsg.getyVel());
+//							playerController.setKeyPressed(objectGameMsg.isUpPressed(), objectGameMsg.isDownPressed(),
+//									objectGameMsg.isLeftPressed(), objectGameMsg.isRightPressed(),
+//									objectGameMsg.isSpacePressed());
+//							playerController.getPlayer().setxLeftVel(objectGameMsg.getxLeftVel());
+//							playerController.getPlayer().setxRightVel(objectGameMsg.getxRightVel());
+//							playerController.getPlayer().setyVel(objectGameMsg.getyVel());
+//							playerController.getPlayer().move();
 						}
 
 						// 속도 동기화
-						// otherController.getPlayer().setxLeftVel(objectGameMsg.getxLeftVel());
-						// otherController.getPlayer().setxRightVel(objectGameMsg.getxRightVel());
-						// otherController.getPlayer().setyVel(objectGameMsg.getyVel());
+
 						// 키 동기화
 
 					} else if (objectGameMsg.getCode().matches(NetworkStatus.GAME_LOSE)) {

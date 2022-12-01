@@ -91,6 +91,7 @@ public class GameModelMsg implements Serializable {
 		this.leftPressed = leftPressed;
 		this.rightPressed = rightPressed;
 		this.spacePressed = spacePressed;
+		this.playerNum = playerNum;
 	}
 
 	public double getxLeftVel() {
