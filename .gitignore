@@ -6,3 +6,6 @@
 .idea
 /out/
 src/META-INF/MANIFEST.MF
+.DS_Store
+/src/out
+src/SuperMario.iml

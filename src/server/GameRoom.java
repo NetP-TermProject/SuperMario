@@ -2,45 +2,39 @@ package server;
 
 import java.util.Vector;
 
-import server.GameServer.UserService;
-
 public class GameRoom {
-	private String roomNumber;
-	private int readyStatusCnt = 0;
-	
-	public Vector<UserService> userList;
-	
-	public GameRoom(String roomNumber) {
-		this.roomNumber = roomNumber;
-		userList = new Vector<UserService>();
-	}
-	
-	public int getReadyStatusCnt() {
-		return readyStatusCnt;
-	}
-	
-	public void setReadyStatusCnt(int readyStatusCnt) {
-		this.readyStatusCnt = readyStatusCnt;
-	}
+    private String roomNumber;
+    private int readyStatusCnt = 0;
 
-	public void increaseReadyStatusCnt() {
-		readyStatusCnt++;
-	}
+    public Vector<UserService> userList;
 
-	public void addPlayerinGameRoom(UserService userSerivce) {
-		userList.add(userSerivce);
-	}
+    public GameRoom(String roomNumber) {
+        this.roomNumber = roomNumber;
+        userList = new Vector(2);
+    }
 
-	public Vector<UserService> getUserList() {
-		return userList;
-	}
+    public int getReadyStatusCnt() {
+        return readyStatusCnt;
+    }
 
-	public void setUserList(Vector<UserService> userList) {
-		this.userList = userList;
-	}
+    public void setReadyStatusCnt(int readyStatusCnt) {
+        this.readyStatusCnt = readyStatusCnt;
+    }
 
-	public String getRoomNumber() {
-		return roomNumber;
-	}
+    public void increaseReadyStatusCnt() {
+        readyStatusCnt++;
+    }
+
+    public void addPlayerinGameRoom(UserService userService) {
+        userList.add(userService);
+    }
+
+    public Vector<UserService> getUserList() {
+        return userList;
+    }
+
+    public String getRoomNumber() {
+        return roomNumber;
+    }
 
 }
