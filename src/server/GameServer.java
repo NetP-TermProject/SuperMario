@@ -5,7 +5,6 @@ import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.Vector;
-import java.util.concurrent.atomic.AtomicInteger;
 
 import javax.swing.JButton;
 import javax.swing.JFrame;
@@ -40,7 +39,7 @@ public class GameServer extends JFrame {
     }
 
     public static int roomNumberCnt = 0;
-    public static int serverCnt = 0;
+    public static int serverUserCnt = 0;
 
     public static void main(String[] args) {
         EventQueue.invokeLater(() -> {
