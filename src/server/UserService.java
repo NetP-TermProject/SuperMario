@@ -31,10 +31,6 @@ public class UserService extends Thread {
         }
     }
 
-    public void Login() {
-        gameServer.AppendText("새로운 참가자 " + UserName + " 서버에 입장.");
-    }
-
     public void Logout() {
         GameServer.UserVec.removeElement(this);
         for (int i = 0; i < roomVector.size(); i++) {
@@ -74,7 +70,7 @@ public class UserService extends Thread {
         gameServer.AppendObject(objectGameLose);
     }
 
-    public void WriteRoomListObject() {
+    public static void WriteRoomListObject() {
         StringBuffer roomList = new StringBuffer();
         if (roomVector.isEmpty())
             roomList.append("");
@@ -124,87 +120,66 @@ public class UserService extends Thread {
         }
     }
 
+    private void logIn(GameModelMsg objectGameMsg) {
+        synchronized (this) {
+            UserName = "player@" + System.nanoTime() + ++GameServer.serverUserCnt;
+        }
+        objectGameMsg.setPlayerName(UserName);
+        gameServer.AppendText("새로운 참가자 " + UserName + " 서버에 입장.");
+        WriteOneObject(objectGameMsg);
+    }
+
+    private synchronized void makeRoomList(GameModelMsg objectGameMsg) {
+        String generatedRoomNumber = objectGameMsg.getRoomNumber() + ++GameServer.roomNumberCnt;
+        GameRoom gameRoom = new GameRoom(generatedRoomNumber);
+        roomVector.add(gameRoom);
+        WriteRoomListObject();
+    }
+
     @Override
     public void run() {
+        Object obcm = null;
+
         while (true) {
             try {
-                Object obcm = null;
-                GameModelMsg objectGameMsg = null;
-                if (gameServer.getSocket() == null)
+                if (isGameServerSocketNull())
                     break;
                 try {
                     obcm = ois.readObject();
-                } catch (ClassNotFoundException e) {
+                } catch (ClassNotFoundException | NullPointerException e) {
                     e.printStackTrace();
                     return;
                 }
-                if (obcm == null)
-                    break;
-                if (obcm instanceof GameModelMsg) {
-                    objectGameMsg = (GameModelMsg) obcm;
-                    gameServer.AppendObject(objectGameMsg);
-                } else
+                if (!(obcm instanceof GameModelMsg)) {
                     continue;
-                if (objectGameMsg.getCode().matches(NetworkStatus.LOG_IN)) { // 100
-                    synchronized (this) {
-                        UserName = "player@" + System.nanoTime() + ++GameServer.serverCnt;
-                    }
-                    objectGameMsg.setPlayerName(UserName);
-                    Login();
-                    WriteOneObject(objectGameMsg);
-                } else if (objectGameMsg.getCode().matches(NetworkStatus.SHOW_LIST)) { // 1200
-                    WriteRoomListObject();
-                } else if (objectGameMsg.getCode().matches(NetworkStatus.MAKE_ROOM_REQUEST)) { // 1000
-                    synchronized (this) {
-                        String generatedRoomNumber = objectGameMsg.getRoomNumber() + ++GameServer.roomNumberCnt;
-                        GameRoom gameRoom = new GameRoom(generatedRoomNumber);
-                        roomVector.add(gameRoom);
-                        WriteRoomListObject();
-                    }
-                } else if (objectGameMsg.getCode().matches(NetworkStatus.LOG_OUT)) { // 200
-                    Logout();
-                    break;
-                } else if (objectGameMsg.getCode().matches(NetworkStatus.GAME_READY)) {// 300
-                    for (int i = 0; i < roomVector.size(); i++) {
-                        if (roomVector.elementAt(i).getRoomNumber().matches(objectGameMsg.getRoomNumber())) {
-                            if (roomVector.elementAt(i).userList.size() == GameSettings.maxPlayerCount) {
-                                WriteErrorMsg();
-                                break;
-                            } else {
-                                roomVector.elementAt(i).increaseReadyStatusCnt();
-                                roomVector.elementAt(i).addPlayerinGameRoom(this);
-                                WriteRoomListObject();
-                            }
-                        }
-                        if (roomVector.elementAt(i).userList.size() == GameSettings.maxPlayerCount
-                                && roomVector.elementAt(i).getReadyStatusCnt() == GameSettings.maxPlayerCount) { // 게임 시작 프로토콜
-                            WriteGameStartObject(i, objectGameMsg.getRoomNumber());
-                            roomVector.elementAt(i).setReadyStatusCnt(0);
-                            break;
-                        } else {
-                            WriteOneObject(objectGameMsg);// 게임 대기 화면 상태 보내기
-                        }
-                    }
-                    gameServer.AppendText(UserName + " 게임준비완료 ");
-
-                } else if (objectGameMsg.getCode().matches(NetworkStatus.GAME_BUTTON)) { // 600
-                    for (int i = 0; i < roomVector.size(); i++) {
-                        if (roomVector.elementAt(i).getRoomNumber().matches(objectGameMsg.getRoomNumber())) { // 받은
-
-                            WriteGameButtonMsg(i, objectGameMsg);
-                            gameServer.AppendText(objectGameMsg.posToString());
-                            gameServer.AppendText(objectGameMsg.inputToString());
-                        }
-                    }
-                } else if (objectGameMsg.getCode().matches(NetworkStatus.GAME_WIN)) { // 700 수신
-                    for (int i = 0; i < roomVector.size(); i++) {
-                        if (roomVector.elementAt(i).getRoomNumber().matches(objectGameMsg.getRoomNumber())) {
-                            WriteGameLoseObject(i, objectGameMsg.getRoomNumber()); //800 송신
-                        }
-                    }
-                    WriteOneObject(objectGameMsg);
                 }
 
+                GameModelMsg objectGameMsg = (GameModelMsg) obcm;
+                gameServer.AppendObject(objectGameMsg);
+
+                switch (getNetworkCode(objectGameMsg)) {
+                    case NetworkStatus.LOG_OUT:
+                        Logout();
+                        break;
+                    case NetworkStatus.LOG_IN:
+                        logIn(objectGameMsg);
+                        break;
+                    case NetworkStatus.SHOW_LIST:
+                        WriteRoomListObject();
+                        break;
+                    case NetworkStatus.MAKE_ROOM_REQUEST:
+                        makeRoomList(objectGameMsg);
+                        break;
+                    case NetworkStatus.GAME_READY:
+                        setGameReadyStatus(objectGameMsg);
+                        break;
+                    case NetworkStatus.GAME_BUTTON:
+                        sendGameButtonToPlayers(objectGameMsg);
+                        break;
+                    case NetworkStatus.GAME_WIN:
+                        setGameOver(objectGameMsg);
+                        break;
+                }
             } catch (IOException e) {
                 gameServer.AppendText("ois.readObject() error");
                 try {
@@ -219,4 +194,57 @@ public class UserService extends Thread {
             } // 바깥 catch문끝
         } // while
     } // run
+
+    private void setGameOver(GameModelMsg objectGameMsg) {
+        for (int i = 0; i < roomVector.size(); i++) {
+            if (roomVector.elementAt(i).getRoomNumber().matches(objectGameMsg.getRoomNumber())) {
+                WriteGameLoseObject(i, objectGameMsg.getRoomNumber()); //800 송신
+            }
+        }
+        WriteOneObject(objectGameMsg);
+    }
+
+    private void sendGameButtonToPlayers(GameModelMsg objectGameMsg) {
+        for (int i = 0; i < roomVector.size(); i++) {
+            if (roomVector.elementAt(i).getRoomNumber().matches(objectGameMsg.getRoomNumber())) { // 받은
+
+                WriteGameButtonMsg(i, objectGameMsg);
+                gameServer.AppendText(objectGameMsg.posToString());
+                gameServer.AppendText(objectGameMsg.inputToString());
+            }
+        }
+    }
+
+    private void setGameReadyStatus(GameModelMsg objectGameMsg) {
+        for (int i = 0; i < roomVector.size(); i++) {
+            if (roomVector.elementAt(i).getRoomNumber().matches(objectGameMsg.getRoomNumber())) {
+                if (roomVector.elementAt(i).userList.size() == GameSettings.maxPlayerCount) {
+                    WriteErrorMsg();
+                    break;
+                } else {
+                    roomVector.elementAt(i).increaseReadyStatusCnt();
+                    roomVector.elementAt(i).addPlayerinGameRoom(this);
+                    WriteRoomListObject();
+                }
+            }
+            if (roomVector.elementAt(i).userList.size() == GameSettings.maxPlayerCount
+                    && roomVector.elementAt(i).getReadyStatusCnt() == GameSettings.maxPlayerCount) { // 게임 시작 프로토콜
+                WriteGameStartObject(i, objectGameMsg.getRoomNumber());
+                roomVector.elementAt(i).setReadyStatusCnt(0);
+                break;
+            } else {
+                WriteOneObject(objectGameMsg);// 게임 대기 화면 상태 보내기
+            }
+        }
+        gameServer.AppendText(UserName + " 게임준비완료 ");
+    }
+
+
+    private static String getNetworkCode(GameModelMsg objectGameMsg) {
+        return objectGameMsg.getCode();
+    }
+
+    private boolean isGameServerSocketNull() {
+        return gameServer.getSocket() == null;
+    }
 }
